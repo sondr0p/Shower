@@ -4,36 +4,43 @@ import requests
 from bs4 import BeautifulSoup as soup
 import tweepy
 import time
-import datetime
+import schedule
 
-# Get auth
-auth = tweepy.OAuthHandler('consumerkey', 'consumersecret')
-auth.set_access_token('token', 'tokensecret')
+def post():
+    # Get auth
+    auth = tweepy.OAuthHandler('consumerkey', 'consumersecret')
+    auth.set_access_token('token', 'tokensecret')
 
-api = tweepy.API(auth)
+    api = tweepy.API(auth)
 
-#override tweepy.StreamListener to add logic to on_status
-class MyStreamListener(tweepy.StreamListener):
-    def on_status(self, status):
-        print(status.text)
+    #override tweepy.StreamListener to add logic to on_status
+    class MyStreamListener(tweepy.StreamListener):
+        def on_status(self, status):
+            print(status.text)
 
-myStreamListener = MyStreamListener()
-myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
+    myStreamListener = MyStreamListener()
+    myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
 
-# Open connection and collect page
-url = "https://www.reddit.com/r/Showerthoughts/top/"
-uClient = uReq(url)
-page_html = uClient.read()
-uClient.close()
+    # Open connection and collect page
+    url = "https://www.reddit.com/r/Showerthoughts/top/"
+    uClient = uReq(url)
+    page_html = uClient.read()
+    uClient.close()
 
-# Parse page and print
-page_soup = soup(page_html, 'html.parser')
-container = page_soup.find('div', {'class':'top-matter'}) # Top Post
-title = container.a.text
-if len(title) < 140: # Check if string can be tweeted
-    print(title) # Prints just the title
-else:
-    print('Tweet too long')
+    # Parse page and print
+    page_soup = soup(page_html, 'html.parser')
+    container = page_soup.find('div', {'class':'top-matter'}) # Top Post
+    title = container.a.text
+    if len(title) < 140: # Check if string can be tweeted
+        print(title) # Prints just the title
+    else:
+        print('Tweet too long')
 
-# Tweet top post
-# api.update_status(title)
+    # Tweet top post
+    # api.update_status(title)
+
+schedule.every().day.at("10:00").do(post)
+
+while True:
+    schedule.run_pending()
+    time.sleep(360)
